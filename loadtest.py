@@ -8,8 +8,8 @@ import time
 
 URL = "http://localhost:3000/orders"
 
-TOTAL_REQUESTS = 1000000000
-CONCURRENCY = 100000
+TOTAL_REQUESTS = 10000
+CONCURRENCY = 100
 
 ITEMS = [
     "Laptop", "Phone", "Keyboard",

@@ -1,24 +1,35 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import kafkaConfig from 'apps/order/src/config/kafka.config';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 
 @Module({
   imports: [
-    ClientsModule.register([
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [kafkaConfig],
+      envFilePath: 'apps/order/.env',
+    }),
+    ClientsModule.registerAsync([
       {
         name: 'KAFKA_SERVICE',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'order-producer',
-            brokers: ['localhost:19092'],
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.KAFKA,
+          options: {
+            client: {
+              clientId: configService.get<string>('kafka.clientId'),
+              brokers: configService.get<string[]>('kafka.brokers') || [],
+            },
+            producer: {
+              idempotent: true,
+              maxInFlightRequests: 1,
+            },
           },
-          producer: {
-            idempotent: true,
-            maxInFlightRequests: 1,
-          },
-        },
+        }),
       },
     ]),
   ],
