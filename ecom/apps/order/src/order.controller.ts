@@ -1,12 +1,13 @@
 import { Body, Controller, Inject, Post } from '@nestjs/common';
-import { OrderService } from './order.service';
 import { ClientKafka } from '@nestjs/microservices';
-import { v4 as uuidv4 } from 'uuid';
+import { OrderService } from './order.service';
 
 @Controller('orders')
 export class OrderController {
   constructor(
-    @Inject('KAFKA_SERVICE') private readonly kafkaClient: ClientKafka,
+    @Inject('KAFKA_SERVICE')
+    private readonly kafkaClient: ClientKafka,
+
     private readonly orderService: OrderService,
   ) {}
 
@@ -17,14 +18,6 @@ export class OrderController {
 
   @Post()
   createOrder(@Body() body: any) {
-    const orderId = uuidv4();
-    const orderData = { id: orderId, item: body.item, price: body.price };
-
-    this.kafkaClient.emit('order-created', {
-      key: orderId,
-      value: orderData,
-    });
-
-    return { message: 'Order created processing', orderId };
+    return this.orderService.createOrder(body);
   }
 }
